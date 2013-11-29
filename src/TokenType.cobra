@@ -1,0 +1,21 @@
+namespace Sonny
+
+	enum TokenType
+		"""
+		All of the possible lexemes available in the JSON
+		data format.
+		"""
+		CurlyOpen
+		CurlyClose
+		SquareOpen
+		SquareClose
+		Colon
+		Comma
+		DoubleQuote
+		String
+		Number
+		True
+		False
+		Null
+		StreamEnd # end of a file or string stream
+

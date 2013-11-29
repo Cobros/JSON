@@ -1,0 +1,45 @@
+"""
+Sonny is a library that provides minimal support for
+JSON on the .NET and Mono runtimes.
+
+There are many pre-existing solutions which can be
+found at http://www.json.org; however, they all 
+seemed to be geared at much more. Cobson is an
+attempt to provide a simple foundation.
+
+"""
+
+namespace Sonny
+
+	class JSON
+		shared
+			def encode(obj as dynamic) as String
+				"""
+				Encodes a collection or scalar object to a JSON string.
+
+				Hashtables and Dictionaries are converted to JSON
+				object values. 
+				
+				Arrays, Lists, LinkedLists, ArrayLists,
+			 	Queues, Stacks,	SortedList, BitArrays, Sets, etc. are all
+				converted to JSON array values. 
+				
+				Strings, StringBuilders, etc. are converted to JSON string values. 
+
+				All numeric types are converted to number values.
+
+				Boolean types are converted to 'true' or 'false'.
+
+				null or nil is converted to 'null'.
+				"""
+				enc = Encoder(obj)
+				return enc.encode
+
+			def decode(data as String) as dynamic
+				"""
+				Takes a JSON string and returns the most appropriate type.
+				"""
+				par = Parser(data)
+				return par.parse
+
+

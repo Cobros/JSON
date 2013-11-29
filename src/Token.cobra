@@ -1,0 +1,40 @@
+namespace Sonny
+	
+	class Token
+		"""
+		A single token captured from a character
+		stream. Stores the token type, line number, column 
+		position, and value where applicable.
+		"""
+
+		pro type from var as TokenType
+
+
+		pro value from var as String
+
+
+		pro line from var as int
+
+
+		pro column from var as int
+
+
+		cue init(type as TokenType)
+			.init(type, '')
+
+
+		cue init(type as TokenType, value as String)
+			base.init
+			_type = type
+			_value = value
+			_column = 0
+			_line = 0
+
+
+		cue init(line as int, column as int)
+			base.init
+			_value = ''
+			_line = line
+			_column = column
+
+
