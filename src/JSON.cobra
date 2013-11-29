@@ -39,7 +39,7 @@ namespace Sonny
 				"""
 				Takes a JSON string and returns the most appropriate type.
 				"""
-				par = Parser(data)
-				return par.parse
+				parser = Parser(data)
+				return parser.parse
 
 
