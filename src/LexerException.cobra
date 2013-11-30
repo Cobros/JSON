@@ -1,0 +1,9 @@
+namespace Sonny
+
+	class LexerException inherits Exception
+		"""
+		Represents exceptions thrown during tokenization.
+		"""
+		cue init(message as String)
+			base.init(message)
+

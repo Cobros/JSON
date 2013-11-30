@@ -1,0 +1,4 @@
+namespace Sonny
+	class EncoderException inherits Exception
+		cue init(message as String)
+			base.init(message)

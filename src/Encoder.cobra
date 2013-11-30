@@ -1,0 +1,97 @@
+use System.Collections
+use System.IO
+
+namespace Sonny
+	class Encoder
+		"""
+		Encodes map and array containers into JSON strings.
+		"""
+		var _data as dynamic
+
+		cue init(data as dynamic)
+			"""
+			Initializes the encoder with the data that will be 
+			encoded into JSON.
+			"""
+			base.init
+			_data = data
+
+		def encode as String
+			if _data implements IList or _data implements IDictionary
+				return .encodeValue(_data)
+			throw EncoderException('All values should be contained in a Dictionary or Array based container')
+
+		def encodeValue(value as dynamic?) as String is private
+			if value inherits bool or value inherits Boolean
+				temp = value to bool
+				if temp
+					return 'true'
+				return 'false'
+			else if value inherits String
+				return .encodeString(value)
+			else if value implements IDictionary 
+				return .encodeObject(value)
+			else if value implements IList
+				return .encodeArray(value)
+			else if value == nil
+				return 'null'
+			else
+				num = 0.0f
+				if Double.tryParse(value.toString, out num)
+					return Convert.toString(num)
+
+			throw EncoderException('Unsupported data type encountered. [value.getType] was found.')
+
+		def encodeObject(collection as dynamic) as String is private
+			object = collection to IDictionary
+			first = true
+			sb = StringBuilder('{')
+			for key, value in object
+				if not first
+					sb.append(',')
+
+				sb.append(.encodeString(key.toString))
+				sb.append(':')
+				sb.append(.encodeValue(value))
+				first = false
+
+			sb.append('}')
+			return sb.toString
+
+		def encodeArray(collection as dynamic) as String is private
+			array = collection to IList
+			sb = StringBuilder(r'[')
+
+			first = true
+			for item as dynamic in array
+				if not first
+					sb.append(',')
+				sb.append(.encodeValue(item))
+				first = false
+
+			sb.append(']')
+						
+			return sb.toString
+
+		def encodeString(str as String) as String is private
+			sb = StringBuilder('"')
+			reader = StringReader(str)
+			while true
+				ch = reader.read to char
+				if ch == Char.maxValue
+					break
+				if ch in [c'\\', c'"', c'\b', c'\t', c'\f', c'\n', c'\r']
+					sb.append('\\[ch]')
+				else
+					code = ch to int32
+					if code >= 32 and code <= 126
+						sb.append(ch)
+					else
+						# convert to UTF hex representation
+						sb.append('\\u' + Convert.toString(ch).padLeft(4, c'0'))
+
+
+			sb.append('"')
+			return sb.toString
+
+

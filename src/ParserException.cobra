@@ -1,0 +1,14 @@
+namespace Sonny
+	class ParserException inherits Exception
+		"""
+		Exceptions thrown by the parser.
+		"""
+		cue init(token as Token)
+			.init(token, '')
+
+		cue init(token as Token, additional as String)
+			base.init('Unexpected [token.type.toString] token at line [token.line], column [token.column]. [additional]')
+
+			
+
+

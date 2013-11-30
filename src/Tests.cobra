@@ -1,0 +1,51 @@
+use Sonny
+
+class Tests
+	test
+
+		# test some real worl strings
+		# found at http://tizard.stanford.edu/groups/sociality/wiki/7d244/JSON_Test_Data.html
+		assert JSON.decode('{"profile_background_color":"9ae4e8","description":null,"utc_offset":null,"profile_text_color":"000000","followers_count":0,"following":null,"time_zone":null,"friends_count":0,"profile_link_color":"0000ff","url":null,"name":"test123","protected":false,"status":{"text":"testing","truncated":false,"in_reply_to_status_id":null,"in_reply_to_user_id":null,"favorited":false,"created_at":"Fri May 08 19:08:52 +0000 2009","in_reply_to_screen_name":null,"id":1740374460,"source":"web"},"favourites_count":0,"profile_sidebar_fill_color":"e0ff92","created_at":"Fri May 08 19:07:22 +0000 2009","notifications":null,"statuses_count":1,"profile_background_image_url":"http:\/\/static.twitter.com\/images\/themes\/theme1\/bg.gif","profile_sidebar_border_color":"87bc44","profile_image_url":"http:\/\/static.twitter.com\/images\/default_profile_normal.png","profile_background_tile":false,"location":null,"id":38722923,"screen_name":"testSociality"}')
+
+		assert JSON.decode(ns'[{"text":"testing","in_reply_to_screen_name":null,"user":{"profile_background_color":"9ae4e8","profile_image_url":"http:\/\/static.twitter.com\/images\/default_profile_normal.png","description":null,"utc_offset":null,"notifications":null,"profile_text_color":"000000","screen_name":"testSociality","following":null,"profile_link_color":"0000ff","url":null,"name":"test123","protected":false,"favourites_count":0,"profile_sidebar_fill_color":"e0ff92","time_zone":null,"statuses_count":1,"profile_sidebar_border_color":"87bc44","followers_count":0,"profile_background_tile":false,"location":null,"id":38722923,"profile_background_image_url":"http:\/\/static.twitter.com\/images\/themes\/theme1\/bg.gif","created_at":"Fri May 08 19:07:22 +0000 2009","friends_count":0},"truncated":false,"in_reply_to_status_id":null,"in_reply_to_user_id":null,"id":1740374460,"favorited":false,"source":"web","created_at":"Fri May 08 19:08:52 +0000 2009"}]')
+
+		data = {
+			'name': 'John Doe',
+			'age': 30,
+			'height': '6\' 3"',
+			'other': nil
+		}
+
+		assert JSON.encode(data).length
+#		assert JSON.encode(data) == '{"name":"John Doe","age":30,"height":"6' 3\"","other":null}'
+
+		# unicode tests
+		# find tables at http://jrgraphix.net/research/unicode_blocks.php?block=2
+		assert JSON.decode('{"text": "contains unicode characters \\u014d"}')
+
+		obj = JSON.decode('{"at":"\\u0040", "reg": "\\u00ae", "obar": "\\u014d"}')
+		assert obj['at'] == '@'
+		assert obj['reg'] == '®'
+		assert obj['obar'] == 'ō'
+
+
+		# the following should throw lexing and parsing exceptions due to 
+		# improperly formated JSON strings.
+		expect ParserException
+			JSON.decode('"foo":"bar"}')
+
+		expect ParserException
+			JSON.decode('')
+
+		expect LexerException
+			JSON.decode(ns'["apple","orange')
+
+		expect ParserException
+			JSON.decode(ns'["apple","orange"')
+
+		expect ParserException
+			JSON.decode(ns'["apple" "orange"]')
+
+
+
+

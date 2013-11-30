@@ -1,0 +1,95 @@
+namespace Sonny
+	
+	class Parser
+		var _lexer as Lexer
+		var _errors = List<of String>()
+
+		cue init(data as String)
+			base.init
+			_lexer = Lexer(data)
+
+		get nextToken as Token
+			tok = _lexer.getNextToken
+			return tok
+
+		def expect(type as TokenType) as Token? is private
+			token = .nextToken
+			if token.type == type
+				return token
+			else
+				throw ParserException(token, 'Expected [type.toString].')
+
+		def parse as dynamic
+			token = .nextToken
+			branch token.type
+				on TokenType.CurlyOpen
+					return .parseObject
+				on TokenType.SquareOpen
+					return .parseArray
+
+			throw ParserException(token, ns'Expected "{" or "[".')
+
+		def parseValue as dynamic? is private
+			"""
+			Parses any of the JSON value types into their respective
+			types. Objects are made into Dictionaries, arrays
+			into Lists, strings into Strings, and so on.
+			"""
+			token = .nextToken
+			branch token.type
+				on TokenType.CurlyOpen
+					return .parseObject
+				on TokenType.SquareOpen
+					return .parseArray
+				on TokenType.Number
+					return Double.parse(token.value)
+				on TokenType.String
+					return token.value
+				on TokenType.True
+					return true
+				on TokenType.False
+					return false
+				on TokenType.Null
+					return nil
+
+			throw ParserException(token)
+
+		def parseObject as Dictionary<of String, dynamic> is private
+			"""
+			Parses a JSON object as a key value pairs where 
+			keys are strings and values are dynamic.
+			"""
+			map = Dictionary<of String, dynamic>()
+			while true
+				key = .expect(TokenType.String)
+				if key and .expect(TokenType.Colon)
+					value = .parseValue
+					map[key.value] = value
+					token = .nextToken
+					if token.type == TokenType.Comma
+						continue
+					else if token.type == TokenType.CurlyClose
+						break
+					throw ParserException(token)
+
+			return map
+
+		def parseArray as List<of dynamic> is private
+			"""
+			Parses a JSON array value into an list collection.
+			"""
+			list = List<of dynamic>()
+			while true
+				item = .parseValue
+				list.add(item)
+				token = .nextToken
+				if token.type == TokenType.Comma
+					continue
+				else if token.type == TokenType.SquareClose
+					break
+				throw ParserException(token)
+
+			return list
+
+
+

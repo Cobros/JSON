@@ -1,0 +1,181 @@
+use System.Globalization
+use System.Text.RegularExpressions
+
+namespace Sonny
+
+	class Lexer
+		"""
+		Performs lexical analysis on a stream of characters. Main responsibility 
+		is to take a strea of characters and return a stream of tokens, with the 
+		various token types defined in TokenType.cobra.
+		"""
+
+		var _reader as TextReader
+
+		get nextChar as char
+			"""
+			Returns the next character that will be encountered
+			in the stream.
+			"""
+			return _reader.peek to char 
+
+		get curChar as char
+			"""
+			Extracts the next available character from the stream
+			and returns it as the current character. Note, this 
+			advances the current position in the stream.
+			"""
+			_column += 1
+			return _reader.read to char
+
+		pro column from var as int
+			"""
+			The current column position in the stream.
+			"""
+
+		pro line from var as int
+			"""
+			The current line in the stream.
+			"""
+
+		cue init(str as String)
+			"""
+			Creates a lexer based on a string. The sting is then accessed
+			via a StringReader.
+			"""
+			base.init
+			_reader = StringReader(str)
+
+		cue init(stream as Stream)
+			"""
+			Creates a lexer based off any Stream type available in 
+			System.IO. 
+			"""
+			base.init
+			try
+				_reader = StreamReader(stream)
+			catch e as Exception
+				print '[e.getType]: [e]'
+
+		def getNextToken as Token
+			"""
+			Returns the next available token from the stream.
+			Whitespaces not part of string values are ignored.
+			"""
+			while .nextChar <> Char.maxValue
+				ch = .curChar
+				if ch == c'\r'
+					if .nextChar == c'\n'
+						ch = .curChar # consume the CR
+					.line += 1
+					continue
+				else if ch == c'\n'
+					.column = 0
+					.line += 1
+					continue
+				else if Char.isWhiteSpace(ch)
+					# ignore any whitespace between tokens
+					continue
+
+				token = Token(.line, .column)
+				branch ch
+					on c'{'
+						token.type = TokenType.CurlyOpen
+					on c'}'
+						token.type = TokenType.CurlyClose
+					on c'['
+						token.type = TokenType.SquareOpen
+					on c']'
+						token.type = TokenType.SquareClose
+					on c':'
+						token.type = TokenType.Colon
+					on c','
+						token.type = TokenType.Comma
+					on c'"'
+						return .getStringToken
+					on c't' or c'f' or c'n'
+						return .getMiscToken(ch)
+					else
+						# it has to be a number or invalid
+						return .getNumberToken(ch)
+
+				return token
+			
+			return Token(TokenType.StreamEnd)
+
+		def getStringToken as Token is private
+			"""
+			Retrieves a string value from the stream as a token.
+			Throws a LexerException if the string cannot be properly
+			tokenized.
+			"""
+			token = Token(.line, .column)
+			token.type = TokenType.String
+
+			sb = StringBuilder()
+			while true
+				ch = .curChar
+				if ch == c'"'
+					break
+				else if ch == Char.maxValue
+					throw LexerException('Unexpected end of stream at line [.line], column [.column].')
+				else if ch == c'\\'
+					ch = .curChar
+					if ch in r'"\/bfnrt'
+						# \, /, b, f, n, r, and t are allowed to be escaped
+						sb.append('\\[ch]')
+					else if ch == c'u'
+						# read in a unicode value
+						hexbuilder = StringBuilder()
+						for i in 0 : 4
+							hexbuilder.append(.curChar)
+						codepoint = int.parse(hexbuilder.toString, NumberStyles.HexNumber)
+						sb.append(Char.convertFromUtf32(codepoint))
+					else
+						throw LexerException('Invalid escape character sequence at line [.line], column [.column].')
+				else
+					sb.append(ch)
+
+			token.value = sb.toString
+			return token
+
+		def getNumberToken(ch as char) as Token is private
+			"""
+			Gathers the characters in a stream up until a space is found and 
+			checks whether it is a number, true, false, or null.
+			"""
+			token = Token(.line, .column)
+			sb = StringBuilder(ch.toString)
+
+			while .nextChar in '+-.eE0123456789'
+				ch = .curChar
+				sb.append(ch)
+
+			token.value = sb.toString
+			if Regex.isMatch(token.value, r'0|[-]?\d+(?:\.\d+(?:[eE][+-]?\d+))?')
+				token.type = TokenType.Number
+				return token
+			
+			throw LexerException('Improperly formatted number token found at line [token.line], column [token.column].')
+
+		def getMiscToken(ch as char) as Token is private
+			token = Token(.line, .column)
+			sb = StringBuilder(ch.toString)
+
+			while .nextChar in 'truefalsnu'
+				ch = .curChar
+				sb.append(ch)
+			
+			str = sb.toString
+			if str in ['true','false','null']
+				branch str
+					on 'true'
+						token.type = TokenType.True
+					on 'false'
+						token.type = TokenType.False
+					on 'null'
+						token.type = TokenType.Null
+				return token
+
+			throw LexerException('Invalid token found at line [token.line], column [token.column].')
+
