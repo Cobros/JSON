@@ -1,4 +1,5 @@
 namespace Sonny
+
 	class Token
 		"""
 		A single token captured from a character
