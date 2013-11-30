@@ -1,7 +1,6 @@
 use System.Globalization
 use System.Text.RegularExpressions
 
-
 namespace Sonny
 
 	class Lexer

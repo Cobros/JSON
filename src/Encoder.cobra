@@ -88,9 +88,10 @@ namespace Sonny
 						sb.append(ch)
 					else
 						# convert to UTF hex representation
-						sb.append('\\u' + Convert.toString(ch,16).padLeft(4, c'0'))
+						sb.append('\\u' + Convert.toString(ch).padLeft(4, c'0'))
 
 
 			sb.append('"')
 			return sb.toString
+
 
